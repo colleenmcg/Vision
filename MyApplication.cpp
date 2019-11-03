@@ -885,7 +885,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 {
 	// *** Student needs to develop this routine and add in objects using the addObject method
 
-	Mat grey_image, binary_image, smoothed_image, canny_image;
+	Mat grey_image, binary_image, smoothed_image, canny_image, dilated_image;
 	Mat canny_output;
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
@@ -893,77 +893,43 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	cvtColor(image, grey_image, CV_BGR2GRAY);
 
 	blur(grey_image, smoothed_image, Size(3, 3));
-	image = smoothed_image;
+	//image = smoothed_image;
 
+	threshold(smoothed_image, binary_image, 100, 255, THRESH_BINARY);
+	//image = binary_image;
 
-	//double m = (image.rows*image.cols) / 2;
-	//int bin = 0;
-	//double med = -1.0;
-
-	//int histSize = 256;
-	//float range[] = { 0, 256 };
-	//const float* histRange = { range };
-	//bool uniform = true;
-	//bool accumulate = false;
-	//cv::Mat hist;
-	//cv::calcHist(&image, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, uniform, accumulate);
-
-	//for (int i = 0; i < histSize && med < 0.0; ++i)
-	//{
-	//	bin += cvRound(hist.at< float >(i));
-	//	if (bin > m && med < 0.0)
-	//		med = i;
-	//}
-
-	//double l = (1.0 - 0.33) * med;
-	//double u = (1.0 + 0.33) * med;
-	//int lower;
-	//int upper;
-	//if (l > 0) {
-	//	lower = int(l);
-	//}
-	//else {
-	//	lower = 0;
-	//}
-	////int lower = int(max(0, (1.0 - 0.33) * med));
-	//if (255 < u) {
-	//	upper = 255;
-	//}
-	//else {
-	//	upper = int(u);
-	//}
-	////int upper = int(min(255, (1.0 + 0.33) * med));
-	//Canny(image, canny_image, lower, upper);
+	Canny(binary_image, canny_image, 100, 200);
 	//image = canny_image;
 
-	threshold(image, binary_image, 100,
-		255, THRESH_BINARY);
-	image = binary_image;
-
-	Canny(image, canny_image, 100, 200);
-	image = canny_image;
-	Mat copyImg;
-	image.copyTo(copyImg);
-
-
-	findContours(copyImg, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-	Mat drawing;
-	//Mat drawing = Mat::zeros(image.size(), CV_8UC3);
-	//for (int i = 0; i < contours.size(); i++)
-	//{
-	//	Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-	//	drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
-	//}
+	dilate(canny_image, dilated_image, Mat());
+	//image = dilated_image;
+	//Mat imageCopy = dilated_image.clone();
+	findContours(dilated_image, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+	
+	//image = dilated_image;
+	Mat dst = Mat::zeros(dilated_image.rows, dilated_image.cols, CV_8UC3);
 	for (int i = 0; i < contours.size(); i++)
 	{
-		Scalar colour(rand() & 0xFF, rand() & 0xFF, rand() & 0xFF);
-		drawContours(drawing, contours, i, colour, CV_FILLED, 8, hierarchy);
+		Scalar color = (255, 255, 255);
+		drawContours(dst, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
 	}
 
-	/// Show in a window
-	namedWindow("Contours", CV_WINDOW_AUTOSIZE);
-	imshow("Contours", drawing);
+	//image = dst;
+	
+	namedWindow("Components", CV_WINDOW_AUTOSIZE);
+	imshow("Components", dst);
+	waitKey(0);
+	
+
+	
+	/*Mat drawing;
+	drawing = image.clone();
+
+	for (int contour_number = 0; (contour_number < contours.size()); contour_number++)
+	{
+		drawContours(image, contours, contour_number, Scalar(255,0,0), 2, 8, hierarchy, 0);
+	}
+	namedWindow("contour", CV_WINDOW_AUTOSIZE);*/
 }
 
 
