@@ -906,6 +906,8 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	//Mat dst = Mat::zeros(dilated_image.rows, dilated_image.cols, CV_8UC3);
 	vector<Point> approx;
 	vector<vector<Point> > squares;
+	Mat* display_image = NULL;
+	Mat cropped;
 	//Scalar color = (255, 0, 255);
 	for (int i = 0; i < contours.size(); i++)
 	{
@@ -917,31 +919,42 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			drawContours(image, contours, i, color, 4, 8, hierarchy, 0);
 			Scalar color1(255, 0, 0);
 			line(image, approx[0], approx[0], color1, 5, 8, 0);
-			//squares.push_back(approx);
 
 			
-			int x1 = approx[0].x;
+			float x1 = approx.at(0).x;
+			float y1 = approx.at(0).y;
+			float y2 = approx.at(1).y;
+			float x4 = approx.at(3).x;
+			float h = abs(y2-y1);
+			float w = abs(x4 - x1);
+			image(Rect(x1, y1, w, h)).copyTo(cropped);
+
+
+			namedWindow("Cropped", 1);
+			imshow("Cropped", cropped);
+  			waitKey(0);
+			
+		/*	int x1 = approx[0].x;
 			int y1 = approx[0].y;
 			int x2 = approx[1].x;
 			int y2 = approx[1].y;
 			int x3 = approx[2].x;
 			int y3 = approx[2].y;
 			int x4 = approx[3].x;
-			int y4 = approx[3].y;
+			int y4 = approx[3].y;*/
+
 
 		
-			
-			addObject("test", y1, x1, y4, x4, y2, x2, y3, x3, image);
-			
-			//vector<Point> approxTriangle;
-			//for (size_t i = 0; i < contours.size(); i++) {
-				//approxPolyDP(contours[i], approxTriangle, arcLength(Mat(contours[i]), true)*0.05, true);
-				//if (approxTriangle.size() == 3) {
-					//drawContours(img, contours, i, Scalar(0, 255, 255), CV_FILLED); // fill GREEN
-			//vector<Point>::iterator vertex;
-			/*for (vertex = approx.begin(); vertex != approx.end(); ++vertex) {
-				circle(image, *vertex, 3, Scalar(0, 0, 255), 1);
-			}*/
+			//
+			//ObjectAndLocation* obj =addObject("test", y1, x1, y4, x4, y2, x2, y3, x3, image);
+			//Scalar colour(0x00, 0x00, 0xFF);
+			////display_image = &(image);
+			//obj->DrawObject(display_image, colour);
+			//Mat smaller_image;
+			//resize(*display_image, smaller_image, Size(display_image->cols / 4, display_image->rows / 4));
+			//imshow("individual image", smaller_image);
+
+
 
 			/*Rect rect = cv::boundingRect(approx);
 			Point topLeft = rect.tl();
@@ -954,19 +967,9 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 
 	////image = dst;
 
-	namedWindow("Components", 1);
+	//namedWindow("Components", 1);
 	//imshow("Components", image);
 	//waitKey(0);
-
-
-
-	/*Mat drawing;
-	drawing = image.clone();
-	for (int contour_number = 0; (contour_number < contours.size()); contour_number++)
-	{
-		drawContours(image, contours, contour_number, Scalar(255,0,0), 2, 8, hierarchy, 0);
-	}
-	namedWindow("contour", CV_WINDOW_AUTOSIZE);*/
 }
 
 
