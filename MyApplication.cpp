@@ -73,7 +73,7 @@ class ImageWithBlueSignObjects : public ImageWithObjects
 {
 public:
 	ImageWithBlueSignObjects(string passed_filename);
-	ImageWithBlueSignObjects(FileNode& node); 
+	ImageWithBlueSignObjects(FileNode& node);
 	void LocateAndAddAllObjects(AnnotatedImages& training_images);  // *** Student needs to develop this routine and add in objects using the addObject method
 };
 
@@ -252,7 +252,7 @@ void ImageWithObjects::extractAndSetObjectImage(ObjectAndLocation *new_object)
 }
 void ImageWithObjects::read(FileNode& node)
 {
-	filename = (string) node["Filename"];
+	filename = (string)node["Filename"];
 	image = imread(filename, -1);
 	FileNode images_node = node["Objects"];
 	if (images_node.type() == FileNode::SEQ)
@@ -521,16 +521,12 @@ void MyApplication()
 
 	/*Mat img = imread("Blue Signs/Testing/Blue001.jpg", -1);
 	char ch = cv::waitKey(1);
-
 	imshow("normal", img);
-
 	Mat grey_image, binary_image;
 	cvtColor(img, grey_image, CV_BGR2GRAY);
-
 	threshold(grey_image, binary_image, 127,
 		255, THRESH_BINARY);
 	img = grey_image;
-
 	imshow("grey", img);*/
 
 }
@@ -848,20 +844,20 @@ void ConfusionMatrix::Print()
 		if (recognised_as_index < confusion_size - 1)
 			cout << class_names[recognised_as_index] << ",";
 		else cout << "False Negative,";
+	cout << endl;
+	for (int ground_truth_index = 0; (ground_truth_index <= class_names.size()); ground_truth_index++)
+	{
+		if (ground_truth_index < confusion_size - 1)
+			cout << "Ground Truth," << class_names[ground_truth_index] << ",";
+		else cout << "Ground Truth,False Positive,";
+		for (int recognised_as_index = 0; recognised_as_index < confusion_size; recognised_as_index++)
+			cout << confusion_matrix[ground_truth_index][recognised_as_index] << ",";
 		cout << endl;
-		for (int ground_truth_index = 0; (ground_truth_index <= class_names.size()); ground_truth_index++)
-		{
-			if (ground_truth_index < confusion_size - 1)
-				cout << "Ground Truth," << class_names[ground_truth_index] << ",";
-			else cout << "Ground Truth,False Positive,";
-			for (int recognised_as_index = 0; recognised_as_index < confusion_size; recognised_as_index++)
-				cout << confusion_matrix[ground_truth_index][recognised_as_index] << ",";
-			cout << endl;
-		}
-		double precision = ((double)tp) / ((double)(tp + fp));
-		double recall = ((double)tp) / ((double)(tp + fn));
-		double f1 = 2.0*precision*recall / (precision + recall);
-		cout << endl << "Precision = " << precision << endl << "Recall = " << recall << endl << "F1 = " << f1 << endl;
+	}
+	double precision = ((double)tp) / ((double)(tp + fp));
+	double recall = ((double)tp) / ((double)(tp + fn));
+	double f1 = 2.0*precision*recall / (precision + recall);
+	cout << endl << "Precision = " << precision << endl << "Recall = " << recall << endl << "F1 = " << f1 << endl;
 }
 
 
@@ -903,28 +899,69 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 
 	dilate(canny_image, dilated_image, Mat());
 	//image = dilated_image;
-	//Mat imageCopy = dilated_image.clone();
-	findContours(dilated_image, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-	
+	//Mat imageCopy = image.clone();
+	findContours(dilated_image, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0,0));
+
 	//image = dilated_image;
-	Mat dst = Mat::zeros(dilated_image.rows, dilated_image.cols, CV_8UC3);
+	//Mat dst = Mat::zeros(dilated_image.rows, dilated_image.cols, CV_8UC3);
+	vector<Point> approx;
+	vector<vector<Point> > squares;
+	//Scalar color = (255, 0, 255);
 	for (int i = 0; i < contours.size(); i++)
 	{
-		Scalar color = (255, 255, 255);
-		drawContours(dst, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
+		approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+		if (approx.size() == 4 &&
+			fabs(contourArea(Mat(approx))) > 1000 &&
+			isContourConvex(Mat(approx))) {
+			Scalar color(255, 0, 255);
+			drawContours(image, contours, i, color, 4, 8, hierarchy, 0);
+			Scalar color1(255, 0, 0);
+			line(image, approx[0], approx[0], color1, 5, 8, 0);
+			//squares.push_back(approx);
+
+			
+			int x1 = approx[0].x;
+			int y1 = approx[0].y;
+			int x2 = approx[1].x;
+			int y2 = approx[1].y;
+			int x3 = approx[2].x;
+			int y3 = approx[2].y;
+			int x4 = approx[3].x;
+			int y4 = approx[3].y;
+
+		
+			
+			addObject("test", y1, x1, y4, x4, y2, x2, y3, x3, image);
+			
+			//vector<Point> approxTriangle;
+			//for (size_t i = 0; i < contours.size(); i++) {
+				//approxPolyDP(contours[i], approxTriangle, arcLength(Mat(contours[i]), true)*0.05, true);
+				//if (approxTriangle.size() == 3) {
+					//drawContours(img, contours, i, Scalar(0, 255, 255), CV_FILLED); // fill GREEN
+			//vector<Point>::iterator vertex;
+			/*for (vertex = approx.begin(); vertex != approx.end(); ++vertex) {
+				circle(image, *vertex, 3, Scalar(0, 0, 255), 1);
+			}*/
+
+			/*Rect rect = cv::boundingRect(approx);
+			Point topLeft = rect.tl();
+			Point bottomRight = rect.br();
+			Point bottomLeft = topLeft + cv::Point(0, rect.height);
+			Point topRight = topLeft + cv::Point(rect.width, 0);
+			addObject("test", topLeft.y, topLeft.x, topRight.y, topRight.x, bottomLeft.y, bottomLeft.x, bottomRight.y, bottomRight.x, image);*/
+		}
 	}
 
-	//image = dst;
-	
-	namedWindow("Components", CV_WINDOW_AUTOSIZE);
-	imshow("Components", dst);
-	waitKey(0);
-	
+	////image = dst;
 
-	
+	namedWindow("Components", 1);
+	//imshow("Components", image);
+	//waitKey(0);
+
+
+
 	/*Mat drawing;
 	drawing = image.clone();
-
 	for (int contour_number = 0; (contour_number < contours.size()); contour_number++)
 	{
 		drawContours(image, contours, contour_number, Scalar(255,0,0), 2, 8, hierarchy, 0);
@@ -940,5 +977,15 @@ double ObjectAndLocation::compareObjects(ObjectAndLocation* otherObject)
 	// Please bear in mind that ImageWithObjects::FindBestMatch assumes that the lower the value the better.  Feel free to change this.
 	return BAD_MATCHING_VALUE;
 }
+
+
+
+
+
+
+
+
+
+
 
 
