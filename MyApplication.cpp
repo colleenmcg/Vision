@@ -887,6 +887,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	vector<Vec4i> hierarchy;
 
 	cvtColor(image, grey_image, CV_BGR2GRAY);
+	//image = grey_image;
 
 	blur(grey_image, smoothed_image, Size(3, 3));
 	//image = smoothed_image;
@@ -898,6 +899,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	//image = canny_image;
 
 	dilate(canny_image, dilated_image, Mat());
+
 	//image = dilated_image;
 	//Mat imageCopy = image.clone();
 	findContours(dilated_image, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0,0));
@@ -908,31 +910,39 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	vector<vector<Point> > squares;
 	Mat* display_image = NULL;
 	Mat cropped;
+	int tempArea;
 	//Scalar color = (255, 0, 255);
 	for (int i = 0; i < contours.size(); i++)
 	{
 		approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+		tempArea = fabs(contourArea(Mat(approx)));
 		if (approx.size() == 4 &&
-			fabs(contourArea(Mat(approx))) > 1000 &&
+			fabs(contourArea(Mat(approx))) > 70000 &&
 			isContourConvex(Mat(approx))) {
 			Scalar color(255, 0, 255);
 			drawContours(image, contours, i, color, 4, 8, hierarchy, 0);
 			Scalar color1(255, 0, 0);
 			line(image, approx[0], approx[0], color1, 5, 8, 0);
 
-			
-			float x1 = approx.at(0).x;
-			float y1 = approx.at(0).y;
-			float y2 = approx.at(1).y;
-			float x4 = approx.at(3).x;
-			float h = abs(y2-y1);
-			float w = abs(x4 - x1);
-			image(Rect(x1, y1, w, h)).copyTo(cropped);
+
+			int x1 = approx.at(0).x;
+			int y1 = approx.at(0).y;
+			int y2 = approx.at(1).y;
+			int x4 = approx.at(3).x;
+			int h = abs(y2 - y1);
+			int w = abs(x4 - x1);
+
+			if (w > 0 && h > 0) {
+				image(Rect(x1, y1, w, h)).copyTo(cropped);
 
 
-			namedWindow("Cropped", 1);
-			imshow("Cropped", cropped);
-  			waitKey(0);
+				namedWindow("Cropped", 1);
+				imshow("Cropped", cropped);
+				waitKey(0);
+			}
+			else {
+
+			}
 			
 		/*	int x1 = approx[0].x;
 			int y1 = approx[0].y;
@@ -967,7 +977,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 
 	////image = dst;
 
-	//namedWindow("Components", 1);
+	namedWindow("Components", 1);
 	//imshow("Components", image);
 	//waitKey(0);
 }
