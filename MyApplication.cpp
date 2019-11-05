@@ -519,16 +519,6 @@ void MyApplication()
 	unknownImages.CompareObjectsWithGroundTruth(trainingImages, groundTruthImages, results);
 	results.Print();
 
-	/*Mat img = imread("Blue Signs/Testing/Blue001.jpg", -1);
-	char ch = cv::waitKey(1);
-	imshow("normal", img);
-	Mat grey_image, binary_image;
-	cvtColor(img, grey_image, CV_BGR2GRAY);
-	threshold(grey_image, binary_image, 127,
-		255, THRESH_BINARY);
-	img = grey_image;
-	imshow("grey", img);*/
-
 }
 
 
@@ -895,7 +885,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	threshold(smoothed_image, binary_image, 100, 255, THRESH_BINARY);
 	//image = binary_image;
 
-	Canny(binary_image, canny_image, 100, 200);
+	Canny(binary_image, canny_image, 0, 200);
 	//image = canny_image;
 
 	dilate(canny_image, dilated_image, Mat());
@@ -917,7 +907,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 		approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
 		tempArea = fabs(contourArea(Mat(approx)));
 		if (approx.size() == 4 &&
-			fabs(contourArea(Mat(approx))) > 70000 &&
+			fabs(contourArea(Mat(approx))) > MINIMUM_SIGN_AREA &&
 			isContourConvex(Mat(approx))) {
 			Scalar color(255, 0, 255);
 			drawContours(image, contours, i, color, 4, 8, hierarchy, 0);
@@ -925,10 +915,14 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			line(image, approx[0], approx[0], color1, 5, 8, 0);
 
 
-			int x1 = approx.at(0).x;
-			int y1 = approx.at(0).y;
-			int y2 = approx.at(1).y;
-			int x4 = approx.at(3).x;
+			int x1 = approx[0].x;
+			int y1 = approx[0].y;
+			int x2 = approx[1].x;
+			int y2 = approx[1].y;
+			int x3 = approx[2].x;
+			int y3 = approx[2].y;
+			int x4 = approx[3].x;
+			int y4 = approx[3].y;
 			int h = abs(y2 - y1);
 			int w = abs(x4 - x1);
 
@@ -936,27 +930,32 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 				image(Rect(x1, y1, w, h)).copyTo(cropped);
 
 
-				namedWindow("Cropped", 1);
-				imshow("Cropped", cropped);
-				waitKey(0);
+				//namedWindow("Cropped", 1);
+				//imshow("Cropped", cropped);
+				//waitKey(0);
 			}
 			else {
 
 			}
 			
-		/*	int x1 = approx[0].x;
-			int y1 = approx[0].y;
-			int x2 = approx[1].x;
-			int y2 = approx[1].y;
-			int x3 = approx[2].x;
-			int y3 = approx[2].y;
-			int x4 = approx[3].x;
-			int y4 = approx[3].y;*/
+			
+		
 
 
 		
-			//
-			//ObjectAndLocation* obj =addObject("test", y1, x1, y4, x4, y2, x2, y3, x3, image);
+			
+			ObjectAndLocation* obj =addObject("test", y1, x1, y4, x4, y3, x3, y2, x2, cropped);
+			/*namedWindow("obj", 1);
+			imshow("obj", obj);
+			waitKey(0);*/
+
+			//ImageWithObjects* trainingImage = training_images.getAnnotatedImage(0);
+			//string name = obj->getName();
+			training_images.FindBestMatch(obj);
+
+				
+
+			//training_images -> FindBestMatch(obj);
 			//Scalar colour(0x00, 0x00, 0xFF);
 			////display_image = &(image);
 			//obj->DrawObject(display_image, colour);
@@ -988,7 +987,74 @@ double ObjectAndLocation::compareObjects(ObjectAndLocation* otherObject)
 {
 	// *** Student should write code to compare objects using chosen method.
 	// Please bear in mind that ImageWithObjects::FindBestMatch assumes that the lower the value the better.  Feel free to change this.
-	return BAD_MATCHING_VALUE;
+	Mat tempSrcImg = otherObject->getImage();
+	Mat templateImg = getImage();
+	Mat gsrc, gtpl, res_32f;
+	//double param;
+	namedWindow("src", .5);
+	imshow("src", tempSrcImg);
+	waitKey(0);
+
+	cvtColor(tempSrcImg, gsrc, CV_BGR2GRAY);
+	cvtColor(templateImg, gtpl, CV_BGR2GRAY);
+
+	double finalRes = matchShapes(gsrc, gtpl, CV_CONTOURS_MATCH_I1, 0);
+	//printf("result of compare %finalRes", finalRes);
+
+	//Mat tempTemp = object
+	//image(tempMI);
+
+//	Mat gref, gtpl, res_32f;
+//	cvtColor(tempSrcImg, gref, CV_BGR2GRAY);
+//	cvtColor(templateImg, gtpl, CV_BGR2GRAY);
+//
+//	const int low_canny = 110;
+//	Canny(gref, gref, low_canny, low_canny * 3);
+//	Canny(gtpl, gtpl, low_canny, low_canny * 3);
+//
+//	namedWindow("file", .5);
+//	imshow("file", gref);
+//	waitKey(0);
+//	
+//	namedWindow("template", .5);
+//	imshow("template", gtpl);
+//	waitKey(0);
+//
+////	Mat res_32f(tempSrcImg.rows - templateImg.rows + 1, tempSrcImg.cols - templateImg.cols + 1, CV_32FC1);
+//	matchTemplate(gref, gtpl, res_32f, CV_TM_CCOEFF_NORMED);
+//	normalize(res_32f, res_32f, 0, 1, NORM_MINMAX, -1, Mat());
+//	Mat result = res_32f;
+//
+//	double minVal; double maxVal; Point minLoc; Point maxLoc;
+//	Point matchLoc;
+//	minMaxLoc(res_32f, &minVal, &maxVal, &minLoc, &maxLoc);
+//	matchLoc = minLoc;
+//	Point match = matchLoc;
+//
+//	rectangle(gref, match, Point(match.x + gtpl.cols, match.y + gtpl.rows), CV_RGB(255, 255, 255), 0.5);
+//	Mat roiImg;
+//	Rect ROI = cv::Rect(match.x, match.y, gtpl.cols, gtpl.rows);
+//	roiImg = gref(ROI);
+//	roiImg.copyTo(gtpl);
+//	imshow("roiImg", roiImg); 
+//	waitKey(0);
+
+
+	//if (maxVal < 0.5)
+	//{
+	//	// No match 
+	//	return;
+	//}
+
+	/*Mat res;
+	res_32f.convertTo(res, CV_8U, 255.0);
+	namedWindow("result", 1);
+	imshow("result", res);*/
+
+
+	
+
+	return finalRes;
 }
 
 
