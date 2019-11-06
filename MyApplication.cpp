@@ -892,7 +892,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 
 	//image = dilated_image;
 	//Mat imageCopy = image.clone();
-	findContours(dilated_image, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0,0));
+	findContours(dilated_image, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0,0));
 
 	//image = dilated_image;
 	//Mat dst = Mat::zeros(dilated_image.rows, dilated_image.cols, CV_8UC3);
@@ -915,6 +915,10 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			line(image, approx[0], approx[0], color1, 5, 8, 0);
 
 
+
+		/*	if (hierarchy[0][i][3] == -1) {
+				drawContours(image, contours, i, (0, 255, 0), 4, 8);
+*/
 			int topLR = approx[0].x;
 			int topLC = approx[0].y;
 			int bottomLR = approx[1].x;
@@ -930,13 +934,8 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			Point2f centre = Point((topLR + bottomRR) / 2, (topLC + bottomRC) / 2);
 			Mat crop = image.clone();
 			getRectSubPix(crop, R.size(), centre, crop);
-			
-		/*	namedWindow("crop", 1);
-			imshow("crop", crop);
-			waitKey(0);
-*/
-			
-			ObjectAndLocation* obj =addObject("test", topLR, topLC, topRR, topRC, bottomRR, bottomRC, bottomLR, bottomLC, crop);
+
+			ObjectAndLocation* obj = addObject("test", topLR, topLC, topRR, topRC, bottomRR, bottomRC, bottomLR, bottomLC, crop);
 			/*namedWindow("obj", 1);
 			imshow("obj", obj);
 			waitKey(0);*/
@@ -944,7 +943,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			//ImageWithObjects* trainingImage = training_images.getAnnotatedImage(0);
 			//string name = obj->getName();
 			training_images.FindBestMatch(obj);
-
+			
 		}
 	}
 
