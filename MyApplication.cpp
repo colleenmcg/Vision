@@ -876,7 +876,7 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 
-	cvtColor(image, grey_image, CV_BGR2GRAY);
+	cvtColor(image, grey_image, cv::COLOR_BGR2GRAY);
 	//image = grey_image;
 
 	blur(grey_image, smoothed_image, Size(3, 3));
@@ -931,7 +931,10 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			Mat crop = image.clone();
 			getRectSubPix(crop, R.size(), centre, crop);
 			
-
+		/*	namedWindow("crop", 1);
+			imshow("crop", crop);
+			waitKey(0);
+*/
 			
 			ObjectAndLocation* obj =addObject("test", topLR, topLC, topRR, topRC, bottomRR, bottomRC, bottomLR, bottomLC, crop);
 			/*namedWindow("obj", 1);
@@ -966,10 +969,18 @@ double ObjectAndLocation::compareObjects(ObjectAndLocation* otherObject)
 	//imshow("src", tempSrcImg);
 //	waitKey(0);
 
-	cvtColor(tempSrcImg, gsrc, CV_BGR2GRAY);
-	cvtColor(templateImg, gtpl, CV_BGR2GRAY);
+	cvtColor(tempSrcImg, gsrc, cv::COLOR_BGR2GRAY);
+	cvtColor(templateImg, gtpl, cv::COLOR_BGR2GRAY);
 
-	double finalRes = matchShapes(gsrc, gtpl, CV_CONTOURS_MATCH_I1, 0);
+	const int low_canny = 1;
+	Canny(gsrc, gsrc, low_canny, low_canny * 200);
+	Canny(gtpl, gtpl, low_canny, low_canny * 200);
+
+	dilate(gsrc, gsrc, Mat());
+	dilate(gtpl, gtpl, Mat());
+
+	double finalRes = matchShapes(gsrc, gtpl, cv::CONTOURS_MATCH_I2, 0);
+
 	//printf("result of compare %finalRes", finalRes);
 
 	//Mat tempTemp = object
