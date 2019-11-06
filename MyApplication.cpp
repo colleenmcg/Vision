@@ -915,36 +915,25 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			line(image, approx[0], approx[0], color1, 5, 8, 0);
 
 
-			int x1 = approx[0].x;
-			int y1 = approx[0].y;
-			int x2 = approx[1].x;
-			int y2 = approx[1].y;
-			int x3 = approx[2].x;
-			int y3 = approx[2].y;
-			int x4 = approx[3].x;
-			int y4 = approx[3].y;
-			int h = abs(y2 - y1);
-			int w = abs(x4 - x1);
+			int topLR = approx[0].x;
+			int topLC = approx[0].y;
+			int bottomLR = approx[1].x;
+			int bottomLC = approx[1].y;
+			int bottomRR = approx[2].x;
+			int bottomRC = approx[2].y;
+			int topRR = approx[3].x;
+			int topRC = approx[3].y;
+			//int h = abs(y2 - y1);
+			//int w = abs(x4 - x1);
 
-			if (w > 0 && h > 0) {
-				image(Rect(x1, y1, w, h)).copyTo(cropped);
-
-
-				//namedWindow("Cropped", 1);
-				//imshow("Cropped", cropped);
-				//waitKey(0);
-			}
-			else {
-
-			}
+			Rect R = boundingRect(approx);
+			Point2f centre = Point((topLR + bottomRR) / 2, (topLC + bottomRC) / 2);
+			Mat crop = image.clone();
+			getRectSubPix(crop, R.size(), centre, crop);
 			
-			
-		
 
-
-		
 			
-			ObjectAndLocation* obj =addObject("test", y1, x1, y4, x4, y3, x3, y2, x2, cropped);
+			ObjectAndLocation* obj =addObject("test", topLR, topLC, topRR, topRC, bottomRR, bottomRC, bottomLR, bottomLC, crop);
 			/*namedWindow("obj", 1);
 			imshow("obj", obj);
 			waitKey(0);*/
@@ -953,24 +942,6 @@ void ImageWithBlueSignObjects::LocateAndAddAllObjects(AnnotatedImages& training_
 			//string name = obj->getName();
 			training_images.FindBestMatch(obj);
 
-				
-
-			//training_images -> FindBestMatch(obj);
-			//Scalar colour(0x00, 0x00, 0xFF);
-			////display_image = &(image);
-			//obj->DrawObject(display_image, colour);
-			//Mat smaller_image;
-			//resize(*display_image, smaller_image, Size(display_image->cols / 4, display_image->rows / 4));
-			//imshow("individual image", smaller_image);
-
-
-
-			/*Rect rect = cv::boundingRect(approx);
-			Point topLeft = rect.tl();
-			Point bottomRight = rect.br();
-			Point bottomLeft = topLeft + cv::Point(0, rect.height);
-			Point topRight = topLeft + cv::Point(rect.width, 0);
-			addObject("test", topLeft.y, topLeft.x, topRight.y, topRight.x, bottomLeft.y, bottomLeft.x, bottomRight.y, bottomRight.x, image);*/
 		}
 	}
 
@@ -991,9 +962,9 @@ double ObjectAndLocation::compareObjects(ObjectAndLocation* otherObject)
 	Mat templateImg = getImage();
 	Mat gsrc, gtpl, res_32f;
 	//double param;
-	namedWindow("src", .5);
-	imshow("src", tempSrcImg);
-	waitKey(0);
+	//namedWindow("src", .5);
+	//imshow("src", tempSrcImg);
+//	waitKey(0);
 
 	cvtColor(tempSrcImg, gsrc, CV_BGR2GRAY);
 	cvtColor(templateImg, gtpl, CV_BGR2GRAY);
